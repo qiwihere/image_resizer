@@ -12,19 +12,36 @@ rh = RedisHandler()
 def resize_image():
     if not 'file' in flask.request.files or not 'size' in flask.request.values:
         return flask.abort(400)
+
     file = flask.request.files['file']
-    size = json.loads(flask.request.values.get('size'))
+    splitted_filename = file.filename.split('.')
+    filename = splitted_filename[0]
+    format = splitted_filename[1]
+
+    if not format in ('jpg', 'png', 'jpeg'):
+        return flask.abort(400)
+
+    size = json.loads(flask.request.values.get('size').encode('utf-8'))
     width = size['width']
     height = size['height']
+    if not width or not height:
+        return flask.abort(400)
+
     file.save(file.filename)
     img = Image.open(file.filename)
     resized = img.resize((int(width), int(height)))
-    resized.save('img_resized.bmp')
+    new_filename = filename+width+'x'+height+'.'+format
+    resized.save(new_filename)
 
-    return flask.jsonify({'result': True}), 201
+    new_task_id = rh.get_new_id()
 
-
-
+    task = {
+        'id': new_task_id,
+        'status': 'ok',
+        'path': flask.request.base_url+"/"+new_filename
+    }
+    rh.add_new_task(new_task_id,task)
+    return flask.jsonify({'result': task}), 201
 
 
 @app.errorhandler(404)

@@ -2,8 +2,8 @@ import redis
 import requests
 
 
-file = open('img.bmp', 'rb')
-data = {'size': '{"height": "1000", "width": "1000"}'}
+file = open('image.jpg', 'rb')
+data = {'size': '{"height": "150", "width": "50"}'}
 
 r = requests.post('http://localhost:5000/resizer/load', files=dict(file=file), data=data)
 print(r.text)
